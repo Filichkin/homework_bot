@@ -94,9 +94,23 @@ def check_response(response):
 
 
 def parse_status(homework):
-    ...
+    """Retrieves homework status."""
+    try:
+        homework_name = homework['homework_name']
+    except KeyError:
+        message = 'Key "homework_name" is not available'
+        logger.error(message)
+        raise KeyError(message)
+    try:
+        verdict = HOMEWORK_VERDICTS[homework['status']]
+    except KeyError:
+        message = 'Unknown homework status.'
+        logger.error(message)
+        raise UnknownHomeworkStatus(message)
 
-    return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+    return (f'The status of the homework checking has changed '
+            f'"{homework_name}". {verdict}'
+            )
 
 
 def main():
