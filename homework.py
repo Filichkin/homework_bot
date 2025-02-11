@@ -4,7 +4,7 @@ from sys import stdout
 
 import logging
 import requests
-from telebot import TeleBot, types
+from telebot import TeleBot
 
 from constants import (
     PRACTICUM_TOKEN,
@@ -14,7 +14,7 @@ from constants import (
     ENDPOINT,
     HEADERS,
     HOMEWORK_VERDICTS,
-    )
+)
 from exceptions import (
     NoVariableError,
     EndpointNotAvailable,
@@ -35,14 +35,11 @@ logger.addHandler(handler)
 
 def check_tokens():
     """Checks the availability of environment variables."""
-    result = True
-    for variable in (PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID):
+    for variable in ('PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID'):
         if globals()[variable] is None:
             message = f'Missing of environment variable: {variable}'
             logger.critical(message)
-            result = False
             raise NoVariableError(message)
-    return result
 
 
 def send_message(bot, message):
@@ -114,25 +111,43 @@ def parse_status(homework):
 
 
 def main():
-    """Основная логика работы бота."""
-
-    ...
-
-    # Создаем объект класса бота
-    bot = ...
+    """Main logic or the bot."""
+    check_tokens()
+    # Создаем объект класса бота.
+    bot = TeleBot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
-
-    ...
+    last_error = None
+    previous_message = None
 
     while True:
         try:
-
-            ...
+            response = get_api_answer(timestamp)
+            check_response(response)
+            timestamp = response['current_date']
+            homeworks = response['homeworks']
+            if homeworks:
+                message = parse_status(homeworks[0])
+                if previous_message != message:
+                    send_message(
+                        bot=bot,
+                        message=message,
+                    )
+                previous_message = message
+            else:
+                logger.debug('No updates')
 
         except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            ...
-        ...
+            message = f'Program failure: {error}'
+            logger.error(message)
+            if error != last_error:
+                send_message(
+                    bot=bot,
+                    message=message
+                )
+            last_error = error
+
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
