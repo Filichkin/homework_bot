@@ -1,5 +1,5 @@
-class NoTokenError(Exception):
-    """Token missing."""
+class NoVariableError(Exception):
+    """Variable missing."""
 
 
 class EndpointNotAvailable(Exception):
