@@ -1,7 +1,6 @@
 import time
 from http import HTTPStatus
 from sys import stdout
-from typing import NoReturn
 
 import logging
 import requests
@@ -47,7 +46,15 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    ...
+    """Send message to chat."""
+    logger.debug('Start of message sending...')
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    except Exception as mistake:
+        message = f'Failed to send message: {mistake}'
+        logger.error(message)
+        raise SendMessageError(message)
+    logger.debug('Message sent successfully')
 
 
 def get_api_answer(timestamp):
