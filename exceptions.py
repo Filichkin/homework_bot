@@ -3,7 +3,7 @@ class NoVariableError(Exception):
 
 
 class EndpointNotAvailable(Exception):
-    """Endpoint is not avaible."""
+    """Endpoint is not available."""
 
 
 class UnknownHomeworkStatus(Exception):
