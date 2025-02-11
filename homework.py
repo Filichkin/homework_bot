@@ -1,22 +1,21 @@
-...
+import time
+from http import HTTPStatus
+from typing import NoReturn
 
-load_dotenv()
+import logging
+import requests
+from telebot import TeleBot, types
 
+from constants import (
+    PRACTICUM_TOKEN,
+    TELEGRAM_TOKEN,
+    TELEGRAM_CHAT_ID,
+    RETRY_PERIOD,
+    ENDPOINT,
+    HEADERS,
+    HOMEWORK_VERDICTS,
+    )
 
-PRACTICUM_TOKEN = ...
-TELEGRAM_TOKEN = ...
-TELEGRAM_CHAT_ID = ...
-
-RETRY_PERIOD = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
-HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-
-
-HOMEWORK_VERDICTS = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-    'reviewing': 'Работа взята на проверку ревьюером.',
-    'rejected': 'Работа проверена: у ревьюера есть замечания.'
-}
 
 
 def check_tokens():
