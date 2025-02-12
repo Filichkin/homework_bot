@@ -12,7 +12,6 @@ from constants import (
     TELEGRAM_CHAT_ID,
     RETRY_PERIOD,
     ENDPOINT,
-    HEADERS,
     HOMEWORK_VERDICTS,
 )
 from exceptions import (
@@ -23,8 +22,9 @@ from exceptions import (
 )
 
 
+HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(stdout)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -36,7 +36,7 @@ logger.addHandler(handler)
 def check_tokens():
     """Checks the availability of environment variables."""
     for variable in ('PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID'):
-        if globals()[variable] is None:
+        if not globals()[variable]:
             message = f'Missing of environment variable: {variable}'
             logger.critical(message)
             raise NoVariableError(message)
@@ -47,11 +47,13 @@ def send_message(bot, message):
     logger.debug('Start of message sending...')
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        logger.debug(
+            f'Message succesfully sent to {TELEGRAM_CHAT_ID}: {message}'
+        )
     except Exception as error:
         message = f'Failed to send message: {error}'
         logger.error(message)
         raise SendMessageError(message)
-    logger.debug('Message sent successfully')
 
 
 def get_api_answer(timestamp):
@@ -105,15 +107,13 @@ def parse_status(homework):
         logger.error(message)
         raise UnknownHomeworkStatus(message)
 
-    return (f'The status of the homework checking has changed '
-            f'"{homework_name}". {verdict}'
-            )
+    return (f'Изменился статус проверки работы "{homework_name}". {verdict}')
 
 
 def main():
     """Main logic or the bot."""
     check_tokens()
-    # Создаем объект класса бота.
+
     bot = TeleBot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     last_error = None
@@ -125,16 +125,18 @@ def main():
             check_response(response)
             timestamp = response['current_date']
             homeworks = response['homeworks']
-            if homeworks:
+            if not homeworks:
+                logger.debug('Empty homework list.')
+            else:
                 message = parse_status(homeworks[0])
                 if previous_message != message:
                     send_message(
                         bot=bot,
                         message=message,
                     )
-                previous_message = message
-            else:
-                logger.debug('No updates')
+                    previous_message = message
+                else:
+                    logger.debug('No updates')
 
         except Exception as error:
             message = f'Program failure: {error}'
