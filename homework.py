@@ -18,10 +18,10 @@ from constants import (
 )
 from exceptions import (
     JsonError,
-    NoVariableError,
     EndpointNotAvailable,
-    UnknownHomeworkStatus,
+    NoVariableError,
     SendMessageError,
+    UnknownHomeworkStatus,
 )
 
 
@@ -103,20 +103,16 @@ def check_response(response):
 
 def parse_status(homework):
     """Retrieves homework status."""
-    try:
-        homework_name = homework['homework_name']
-    except KeyError:
-        message = 'Key "homework_name" is not available'
-        logger.error(message)
-        raise KeyError(message)
-    try:
-        verdict = HOMEWORK_VERDICTS[homework['status']]
-    except KeyError:
-        message = 'Unknown homework status.'
-        logger.error(message)
-        raise UnknownHomeworkStatus(message)
-
-    return (f'Изменился статус проверки работы "{homework_name}". {verdict}')
+    if 'homework_name' not in homework:
+        raise KeyError('Key "homework_name" is not available')
+    if 'status' not in homework:
+        raise KeyError('Key "status" is not available')
+    homework_name = homework['homework_name']
+    status = homework['status']
+    if status not in HOMEWORK_VERDICTS:
+        raise KeyError(f'Key {status} is not available')
+    verdict = HOMEWORK_VERDICTS[status]
+    return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def main():
