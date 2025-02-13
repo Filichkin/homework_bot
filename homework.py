@@ -10,6 +10,7 @@ from constants import (
     PRACTICUM_TOKEN,
     TELEGRAM_TOKEN,
     TELEGRAM_CHAT_ID,
+    HEADERS,
     RETRY_PERIOD,
     ENDPOINT,
     HOMEWORK_VERDICTS,
@@ -22,7 +23,11 @@ from exceptions import (
 )
 
 
-HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+TOKENS = {
+    ('PRACTICUM_TOKEN', PRACTICUM_TOKEN),
+    ('TELEGRAM_TOKEN', TELEGRAM_TOKEN),
+    ('TELEGRAM_CHAT_ID', TELEGRAM_CHAT_ID),
+}
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(stdout)
@@ -35,11 +40,12 @@ logger.addHandler(handler)
 
 def check_tokens():
     """Checks the availability of environment variables."""
-    for variable in ('PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID'):
-        if not globals()[variable]:
-            message = f'Missing of environment variable: {variable}'
-            logger.critical(message)
-            raise NoVariableError(message)
+    tokens_missing = [name for name, token in TOKENS if token is None]
+    if tokens_missing:
+        message = f'Missing of environment variables: {tokens_missing}'
+        logger.critical(message)
+        raise NoVariableError(message)
+    logger.debug('Tokens are availables')
 
 
 def send_message(bot, message):
