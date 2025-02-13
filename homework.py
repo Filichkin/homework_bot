@@ -87,18 +87,18 @@ def get_api_answer(timestamp):
 
 def check_response(response):
     """Checks expected keys in API response."""
-    message = 'Response is not belong expected result'
     if not isinstance(response, dict):
-        logger.error(message)
-        raise TypeError(message)
+        raise TypeError(
+            f'Incorrect response format: {type(response)}\n'
+            f'Message: {response}'
+        )
 
     if 'current_date' not in response or 'homeworks' not in response:
-        logger.error(message)
-        raise KeyError(message)
-
-    if not isinstance(response['homeworks'], list):
-        logger.error(message)
-        raise TypeError(message)
+        raise KeyError('Missing required keys')
+    homeworks = response['homeworks']
+    if not isinstance(homeworks, list):
+        raise TypeError(f'Response is not list, received {type(homeworks)}.')
+    return homeworks
 
 
 def parse_status(homework):
