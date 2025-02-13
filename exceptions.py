@@ -10,5 +10,9 @@ class UnknownHomeworkStatus(Exception):
     """Unknow homework status."""
 
 
+class JsonError(Exception):
+    """JSON decode error."""
+
+
 class SendMessageError(Exception):
     """Message send error."""

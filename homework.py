@@ -1,3 +1,4 @@
+import json
 import time
 from http import HTTPStatus
 from sys import stdout
@@ -16,6 +17,7 @@ from constants import (
     HOMEWORK_VERDICTS,
 )
 from exceptions import (
+    JsonError,
     NoVariableError,
     EndpointNotAvailable,
     UnknownHomeworkStatus,
@@ -45,41 +47,42 @@ def check_tokens():
         message = f'Missing of environment variables: {tokens_missing}'
         logger.critical(message)
         raise NoVariableError(message)
-    logger.debug('Tokens are availables')
 
 
 def send_message(bot, message):
     """Send message to chat."""
-    logger.debug('Start of message sending...')
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    except SendMessageError as error:
+        message = f'Failed to send message: {error}'
+        logger.error(message)
+    else:
         logger.debug(
             f'Message succesfully sent to {TELEGRAM_CHAT_ID}: {message}'
         )
-    except Exception as error:
-        message = f'Failed to send message: {error}'
-        logger.error(message)
-        raise SendMessageError(message)
 
 
 def get_api_answer(timestamp):
     """Makes a request to endpoint."""
     message = 'Endpoint is not available: {}'
     params = {'from_date': timestamp}
-    logger.debug('Reciving statuses if homework...')
     try:
         response = requests.get(
             ENDPOINT,
             params=params,
-            headers=HEADERS)
+            headers=HEADERS
+        )
     except requests.RequestException as error:
-        logger.error(message.format(error))
         raise EndpointNotAvailable(message.format(error))
-    if response.status_code == HTTPStatus.OK:
-        logger.debug('Statuses successfully received.')
+    if response.status_code != HTTPStatus.OK:
+        raise UnknownHomeworkStatus(
+            f'Not succsess status API response: {response.status_code}')
+    try:
         return response.json()
-    logger.error(message.format(response.status_code))
-    raise EndpointNotAvailable(message.format(response.status_code))
+    except json.JSONDecodeError as error:
+        raise JsonError(
+            f'JSON decode error: {error}'
+        )
 
 
 def check_response(response):
