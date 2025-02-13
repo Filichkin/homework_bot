@@ -1,7 +1,8 @@
 import json
+import sys
 import time
 from http import HTTPStatus
-from sys import stdout
+
 
 import logging
 import requests
@@ -11,7 +12,6 @@ from constants import (
     PRACTICUM_TOKEN,
     TELEGRAM_TOKEN,
     TELEGRAM_CHAT_ID,
-    HEADERS,
     RETRY_PERIOD,
     ENDPOINT,
     HOMEWORK_VERDICTS,
@@ -25,14 +25,11 @@ from exceptions import (
 )
 
 
-TOKENS = {
-    ('PRACTICUM_TOKEN', PRACTICUM_TOKEN),
-    ('TELEGRAM_TOKEN', TELEGRAM_TOKEN),
-    ('TELEGRAM_CHAT_ID', TELEGRAM_CHAT_ID),
-}
+TOKENS = ['PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID']
+HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(stdout)
+handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -42,9 +39,9 @@ logger.addHandler(handler)
 
 def check_tokens():
     """Checks the availability of environment variables."""
-    tokens_missing = [name for name, token in TOKENS if token is None]
-    if tokens_missing:
-        message = f'Missing of environment variables: {tokens_missing}'
+    missing_tokens = [token for token in TOKENS if globals()[token] is None]
+    if missing_tokens:
+        message = f'Missing of environment variables: {missing_tokens}'
         logger.critical(message)
         raise NoVariableError(message)
 
@@ -128,11 +125,11 @@ def main():
             timestamp = response['current_date']
             if not homeworks:
                 message = 'No new homeworks statuses.'
-                logger.info(message)
+                logger.debug(message)
             else:
                 message = parse_status(homeworks[0])
                 send_message(bot, message)
-                logger.info(message)
+                logger.debug(message)
 
         except Exception as error:
             message = f'Bot program failure: {error}'
