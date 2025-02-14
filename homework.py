@@ -19,7 +19,6 @@ from exceptions import (
     JsonError,
     EndpointNotAvailable,
     NoVariableError,
-    SendMessageError,
     UnknownHomeworkStatus,
 )
 
@@ -92,6 +91,12 @@ def check_response(response):
     if 'current_date' not in response or 'homeworks' not in response:
         raise KeyError('Missing required keys')
     homeworks = response['homeworks']
+    current_date = response['current_date']
+    if not isinstance(current_date, int):
+        logger.debug(
+            f'Unexpected value type for key {current_date}, '
+            f'received {type(current_date)}.'
+        )
     if not isinstance(homeworks, list):
         raise TypeError(f'Response is not list, received {type(homeworks)}.')
     return homeworks
@@ -106,7 +111,7 @@ def parse_status(homework):
     homework_name = homework['homework_name']
     status = homework['status']
     if status not in HOMEWORK_VERDICTS:
-        raise KeyError(f'Key {status} is not available')
+        raise UnknownHomeworkStatus(f'{status} is not available')
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -116,6 +121,7 @@ def main():
     check_tokens()
     bot = TeleBot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
+    previous_status = ''
 
     while True:
         try:
@@ -126,17 +132,18 @@ def main():
                 message = 'No new homeworks statuses.'
                 logger.debug(message)
             else:
-                message = parse_status(homeworks[0])
-                send_message(bot, message)
-                logger.debug(message)
+                status = parse_status(homeworks[0])
+                if previous_status != status:
+                    send_message(bot, status)
+                previous_status = status
+                logger.debug(status)
 
         except Exception as error:
             message = f'Bot program failure: {error}'
-            logger.error(message)
-            try:
+            if previous_status != message:
                 send_message(bot, message)
-            except SendMessageError as error:
-                logger.error(f'Failed to send message: {error}')
+            previous_status = message
+            logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
 
