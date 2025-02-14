@@ -3,7 +3,6 @@ import sys
 import time
 from http import HTTPStatus
 
-
 import logging
 import requests
 from telebot import TeleBot
@@ -39,7 +38,7 @@ logger.addHandler(handler)
 
 def check_tokens():
     """Checks the availability of environment variables."""
-    missing_tokens = [token for token in TOKENS if globals()[token] is None]
+    missing_tokens = [token for token in TOKENS if not globals()[token]]
     if missing_tokens:
         message = f'Missing of environment variables: {missing_tokens}'
         logger.critical(message)
