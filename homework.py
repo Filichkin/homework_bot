@@ -49,7 +49,7 @@ def send_message(bot, message):
     """Send message to chat."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-    except SendMessageError as error:
+    except Exception as error:
         message = f'Failed to send message: {error}'
         logger.error(message)
     else:
