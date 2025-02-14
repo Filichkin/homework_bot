@@ -60,7 +60,6 @@ def send_message(bot, message):
 
 def get_api_answer(timestamp):
     """Makes a request to endpoint."""
-    message = 'Endpoint is not available: {}'
     params = {'from_date': timestamp}
     try:
         response = requests.get(
@@ -68,13 +67,14 @@ def get_api_answer(timestamp):
             params=params,
             headers=HEADERS
         )
-    except requests.RequestException as error:
-        raise EndpointNotAvailable(message.format(error))
-    if response.status_code != HTTPStatus.OK:
-        raise UnknownHomeworkStatus(
-            f'Not succsess status API response: {response.status_code}')
-    try:
+        if response.status_code != HTTPStatus.OK:
+            raise UnknownHomeworkStatus(
+                f'Not succsess status API response: {response.status_code}')
         return response.json()
+    except requests.RequestException as error:
+        raise EndpointNotAvailable(
+            f'Endpoint is not available: {error}'
+        )
     except json.JSONDecodeError as error:
         raise JsonError(
             f'JSON decode error: {error}'
