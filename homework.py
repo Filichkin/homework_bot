@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 import requests
 from telebot import TeleBot
+from telebot.apihelper import ApiException
 
 from constants import (
     PRACTICUM_TOKEN,
@@ -48,7 +49,7 @@ def send_message(bot, message):
     """Send message to chat."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-    except Exception as error:
+    except ApiException as error:
         message = f'Failed to send message: {error}'
         logger.error(message)
     else:
@@ -87,13 +88,15 @@ def check_response(response):
             f'Incorrect response format: {type(response)}\n'
             f'Message: {response}'
         )
-
-    if 'current_date' not in response or 'homeworks' not in response:
-        raise KeyError('Missing required keys')
+    if 'homeworks' not in response:
+        logger.error('Missing required keys')
+        raise KeyError('Missing required key "homeworks"')
+    if 'current_date' not in response:
+        logger.error('Missing required key "current_date"')
     homeworks = response['homeworks']
     current_date = response['current_date']
     if not isinstance(current_date, int):
-        logger.debug(
+        logger.error(
             f'Unexpected value type for key {current_date}, '
             f'received {type(current_date)}.'
         )
@@ -111,7 +114,7 @@ def parse_status(homework):
     homework_name = homework['homework_name']
     status = homework['status']
     if status not in HOMEWORK_VERDICTS:
-        raise UnknownHomeworkStatus(f'{status} is not available')
+        raise ValueError(f'{status} is not available')
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -121,7 +124,7 @@ def main():
     check_tokens()
     bot = TeleBot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
-    previous_status = ''
+    previous_message = None
 
     while True:
         try:
@@ -133,17 +136,16 @@ def main():
                 logger.debug(message)
             else:
                 status = parse_status(homeworks[0])
-                if previous_status != status:
-                    send_message(bot, status)
-                previous_status = status
+                send_message(bot, status)
+                previous_message = status
                 logger.debug(status)
 
         except Exception as error:
             message = f'Bot program failure: {error}'
-            if previous_status != message:
+            if message != previous_message:
                 send_message(bot, message)
-            previous_status = message
-            logger.error(message)
+                previous_message = message
+                logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
 
