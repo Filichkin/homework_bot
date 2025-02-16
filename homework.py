@@ -133,17 +133,16 @@ def main():
                 message = 'No new homeworks statuses.'
                 logger.debug(message)
             else:
-                status = parse_status(homeworks[0])
-                if status != previous_message:
-                    send_message(bot, status)
-                    previous_message = status
-                    logger.debug(status)
+                message = parse_status(homeworks[0])
 
         except Exception as error:
             message = f'Bot program failure: {error}'
-            send_message(bot, message)
-            logger.info(message)
+
         finally:
+            if message != previous_message:
+                send_message(bot, message)
+                previous_message = message
+                logger.info(message)
             time.sleep(RETRY_PERIOD)
 
 
