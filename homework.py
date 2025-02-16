@@ -17,6 +17,7 @@ from constants import (
     HOMEWORK_VERDICTS,
 )
 from exceptions import (
+    CurrentDateStatus,
     JsonError,
     EndpointNotAvailable,
     NoVariableError,
@@ -92,14 +93,11 @@ def check_response(response):
         logger.error('Missing required keys')
         raise KeyError('Missing required key "homeworks"')
     if 'current_date' not in response:
-        logger.error('Missing required key "current_date"')
+        raise CurrentDateStatus('Current_date not in responce')
     homeworks = response['homeworks']
     current_date = response['current_date']
     if not isinstance(current_date, int):
-        logger.error(
-            f'Unexpected value type for key {current_date}, '
-            f'received {type(current_date)}.'
-        )
+        raise CurrentDateStatus('Current_date is not int')
     if not isinstance(homeworks, list):
         raise TypeError(f'Response is not list, received {type(homeworks)}.')
     return homeworks
@@ -145,7 +143,7 @@ def main():
             if message != previous_message:
                 send_message(bot, message)
                 previous_message = message
-                logger.error(message)
+                logger.info(message)
         finally:
             time.sleep(RETRY_PERIOD)
 

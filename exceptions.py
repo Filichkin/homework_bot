@@ -20,3 +20,9 @@ class JsonError(Exception):
     """JSON decode error."""
 
     pass
+
+
+class CurrentDateStatus(Exception):
+    """Current date status error."""
+
+    pass
