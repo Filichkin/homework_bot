@@ -134,16 +134,15 @@ def main():
                 logger.debug(message)
             else:
                 status = parse_status(homeworks[0])
-                send_message(bot, status)
-                previous_message = status
-                logger.debug(status)
+                if status != previous_message:
+                    send_message(bot, status)
+                    previous_message = status
+                    logger.debug(status)
 
         except Exception as error:
             message = f'Bot program failure: {error}'
-            if message != previous_message:
-                send_message(bot, message)
-                previous_message = message
-                logger.info(message)
+            send_message(bot, message)
+            logger.info(message)
         finally:
             time.sleep(RETRY_PERIOD)
 
