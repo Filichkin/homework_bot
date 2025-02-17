@@ -139,7 +139,7 @@ def main():
                 message = f'Bot program failure: {error}'
                 logger.error(message)
             else:
-                logger.info(error)
+                logger.error(error)
 
         finally:
             if message != previous_message:
