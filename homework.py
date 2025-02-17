@@ -90,7 +90,6 @@ def check_response(response):
             f'Message: {response}'
         )
     if 'homeworks' not in response:
-        logger.error('Missing required keys')
         raise KeyError('Missing required key "homeworks"')
     if 'current_date' not in response:
         raise CurrentDateStatus('Current_date not in responce')
@@ -136,13 +135,16 @@ def main():
                 message = parse_status(homeworks[0])
 
         except Exception as error:
-            message = f'Bot program failure: {error}'
+            if not isinstance(error, CurrentDateStatus):
+                message = f'Bot program failure: {error}'
+                logger.error(message)
+            else:
+                logger.info(error)
 
         finally:
             if message != previous_message:
                 send_message(bot, message)
                 previous_message = message
-                logger.info(message)
             time.sleep(RETRY_PERIOD)
 
 
