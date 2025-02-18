@@ -134,12 +134,12 @@ def main():
             else:
                 message = parse_status(homeworks[0])
 
+        except CurrentDateStatus as error:
+            logger.error(error)
+
         except Exception as error:
-            if not isinstance(error, CurrentDateStatus):
-                message = f'Bot program failure: {error}'
-                logger.error(message)
-            else:
-                logger.error(error)
+            message = f'Bot program failure: {error}'
+            logger.error(message)
 
         finally:
             if message != previous_message:
