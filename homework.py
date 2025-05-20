@@ -1,9 +1,9 @@
 import json
+import logging
 import sys
 import time
 from http import HTTPStatus
 
-import logging
 import requests
 from telebot import TeleBot
 from telebot.apihelper import ApiException
